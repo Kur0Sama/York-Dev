@@ -1,0 +1,158 @@
+const config = {
+    // Bot Owner, level 10 by default. You no longer need to supply the owner ID, as the bot
+    // will pull this information directly from it's application page.
+    'owner': [],
+
+    // Bot Admins, level 9 by default. Array of user ID strings.
+    'admins': [],
+
+    // Bot Support, level 8 by default. Array of user ID strings
+    'support': [],
+
+    // Your Bot's Token. Available on https://discordapp.com/developers/applications/me
+    'token': 'MzcxOTc2MzE4ODQ3Mjg3MzA2.DM9pug.08BaHBwq2bb_nPdaIsvqt7YjxzU',
+
+    'twitterUser': '922436281849864194', // Taken from http://gettwitterid.com/
+    'twitChannel': 'your-channel-id', // Twitter Feed Channel
+
+    // Make an app at https://apps.twitter.com/, and use those details here.
+    'twitter': {
+        'consumer_key': 'D7upR2plGC33wjFaHg6G9KApq',
+        'consumer_secret': 'EPzP8ieaglw3bePkIICyInbEqjdlihY3DKOWiAC1uylfIkLfUj',
+        'access_token': '922436281849864194-y91ODIQdroa9Ql3PPctpjOOPKGb02JK',
+        'access_token_secret': 'urlXHWJQQxHCif73HJNqQxmaXGkx6qrvionXtytcxGGct'
+    },
+
+
+    'dashboard': {
+        'oauthSecret': 'your oauth secret from the app page',
+        'callbackURL': 'http://localhost:3030/callback',
+        'sessionSecret': 'enterasecrethere',
+        'domain': 'localhost',
+        'port': 3030
+    },
+
+    // Default per-server settings. New guilds have these settings. 
+    'defaultSettings': {
+        'prefix': 's:',
+        'afk': false,
+        'afkMessage': 'est désormais AFK, il reviendra bientôt !',
+        'modLogChannel': 'modertion',
+        'patronRole': 'Patrons',
+        'modRole': '♦ Modération ♦',
+        'adminRole': '♦ Administration ♦',
+        'levelNotice': false,
+        'systemNotice': true,
+        'inviteLimit': 100,
+        'scoreTime': 5,
+        'dailyTime': 24,
+        'pointsReward': 250,
+        'minPoints': 1,
+        'maxPoints': 50,
+        'costMulti': 10,
+        'customEmoji': false,
+        'gEmojiID': '355099025449680896',
+        'uEmoji': '💲'
+    },
+
+    // PERMISSION LEVEL DEFINITIONS.
+
+    permLevels: [
+        // This is the lowest permisison level, this is for non-roled users.
+        {
+            level: 0,
+            name: '♦ Membre ♦',
+            // Don't bother checking, just return true which allows them to execute any command their
+            // level allows them to.
+            check: () => true
+        },
+
+        // This is your patron permission level, the patron level should be below the staff roles.
+        {
+            level: 1,
+            // This is the name of the role.
+            name: '♦ Sama ♦',
+            // The following lines check the guild the message came from for the roles.
+            // Then it checks if the member that authored the message has the role.
+            // If they do return true, which will allow them to execute the command in question.
+            // If they don't then return false, which will prevent them from executing the command.
+            check: (message) => {
+                try {
+                    const patronRole = message.guild.roles.find(r => r.name.toLowerCase() === message.settings.patronRole.toLowerCase());
+                    if (patronRole && message.member.roles.has(patronRole.id)) return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+        },
+
+        // This is your permission level, the staff levels should always be above the rest of the roles.
+        {
+            level: 2,
+            // This is the name of the role.
+            name: '♦ Modération ♦',
+            // The following lines check the guild the message came from for the roles.
+            // Then it checks if the member that authored the message has the role.
+            // If they do return true, which will allow them to execute the command in question.
+            // If they don't then return false, which will prevent them from executing the command.
+            check: (message) => {
+                try {
+                    const modRole = message.guild.roles.find(r => r.name.toLowerCase() === message.settings.modRole.toLowerCase());
+                    if (modRole && message.member.roles.has(modRole.id)) return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+        },
+
+        {
+            level: 3,
+            name: '♦ Administration ♦',
+            check: (message) => {
+                try {
+                    const adminRole = message.guild.roles.find(r => r.name.toLowerCase() === message.settings.adminRole.toLowerCase());
+                    return (adminRole && message.member.roles.has(adminRole.id));
+                } catch (e) {
+                    return false;
+                }
+            }
+        },
+        // This is the server owner.
+        {
+            level: 4,
+            name: '♦ Fondateur ♦',
+            // Simple check, if the guild owner id matches the message author's ID, then it will return true.
+            // Otherwise it will return false.
+            check: (message) => message.channel.type === 'text' ? (message.guild.owner.user.id === message.author.id ? true : false) : false
+        },
+
+        // Bot Support is a special inbetween level that has the equivalent of server owner access
+        // to any server they joins, in order to help troubleshoot the bot on behalf of owners.
+        {
+            level: 8,
+            name: '♦ Bot Modo ♦',
+            // The check is by reading if an ID is part of this array. Yes, this means you need to
+            // change this and reboot the bot to add a support user. Make it better yourself!
+            check: (message) => config.support.includes(message.author.id)
+        },
+
+        // Bot Admin has some limited access like rebooting the bot or reloading commands.
+        {
+            level: 9,
+            name: '♦ Bot Admin ♦',
+            check: (message) => config.admins.includes(message.author.id)
+        },
+
+        // This is the bot owner, this should be the highest permission level available.
+        // The reason this should be the highest level is because of dangerous commands such as eval
+        // or exec (if the owner has that).
+        {
+            level: 10,
+            name: '♦ Bot Dev ♦',
+            // Another simple check, compares the message author id to the one stored in the config file.
+            check: (message) => message.client.appInfo.owner.id === message.author.id
+        }
+    ]
+};
+
+module.exports = config;
